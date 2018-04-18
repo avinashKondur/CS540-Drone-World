@@ -101,9 +101,12 @@ class PathFinder:
                 color=world.GetColor(newGoalState)                
         else:
             saved=world.GetPossibleGoalPos(goalState)
+            #print(saved)
             saved=world.hasSupportingBlock(saved)
             #avail = [m if m not in self.__goalStates else None for m in saved]
             possiblePos = list(filter(lambda a: a not in self.__goalStates, saved))
+            
+            #print(possiblePos)
             newGoalState=self.__getNearestPositions(possiblePos,world.GetDronePosition())
             
         return newGoalState,color
@@ -117,11 +120,16 @@ class PathFinder:
         actions = []
         #if the target location is empty and there is a supporting block below
         if currentHeight == goalHeight-1:
-            sourcePos = self.__identifySourcePosition(world,goalState,color)
+            print('goal state is empty and no blocks need to be moved....')
+            sourcePos,sourcePosActions = self.__identifySourcePosition(world,goalState,color)
+            
+            actions += sourcePosActions
+            
             actions = self.__getActions(world, sourcePos, goalState,color)
         
         # if the target location does not have supporting block below
         if currentHeight < goalHeight-1:
+            print('The plane of the goal state does not have the required minimum height so blocks need to be placed..')
             # get blocks near by that can be place to achieve the desired height
             neighbours = self.__getBlocks(goalHeight-currentHeight-1,world,goalState,color)
             
@@ -144,6 +152,7 @@ class PathFinder:
         
         #if the target location is occupied and there are blocks on top of it.
         if currentHeight > goalHeight-1:
+            print('The plane of the goal state has greater than the required height so blocks need to be removed..')
             # get Empty locations near by so that that blocks can be moved to achieve the desired height
             neighbours = self.__getEmptyLocations(currentHeight-goalHeight+1,world,goalState,color)
                         
@@ -194,7 +203,7 @@ class PathFinder:
         heights = sorted(heights, key = lambda i : i[1])
         
         pos, h = heights[0][0], world.GetMaxHeight(heights[0][0])
-        
+        #print(pos ,h)
         # get Empty locations near by so that that blocks can be moved to achieve the desired height
         neighbours = self.__getEmptyLocations(h-pos[1],world,goalState,color)
                     
@@ -204,7 +213,7 @@ class PathFinder:
         
         #create actions for neighbours and source block
         for neighbor in neighbours:
-            
+            #print(height, len(neighbours))
             #get block color
             blockColor = world.GetColor([x,height,z])
             
@@ -303,12 +312,12 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('grid3.txt')   
+    world.Initialise('Initialisation.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("test.txt")       
+    goalStates = world.ReadGoalFile("TestGoals.txt")       
     
     pathFinder = PathFinder(world,astar)
     pathFinder.AchieveGoalStates(goalStates)
