@@ -44,7 +44,7 @@ class PathFinder:
             self.finalActions[tuple(goalState)] = actions
             
             #iterate through all the actions and perform actions
-            self.__performActions(actions, self.world)
+            self.__performActions(actions)
             
             print('All actions are performed.......')
             
@@ -102,7 +102,7 @@ class PathFinder:
         else:
             saved=world.GetPossibleGoalPos(goalState)
             #print(saved)
-            saved=world.hasSupportingBlock(saved)
+            #saved=world.hasSupportingBlock(saved)
             #avail = [m if m not in self.__goalStates else None for m in saved]
             possiblePos = list(filter(lambda a: a not in self.__goalStates, saved))
             
@@ -140,7 +140,7 @@ class PathFinder:
             #create actions for neighbours and source block
             for neighbor in neighbours:
                 #get block color
-                blockColor = world.GetColor([x,height,z])
+                blockColor = world.GetColor(neighbor)
                 
                 actions += self.__getActions(world, neighbor, [x,height,z],blockColor)
                 
@@ -247,21 +247,21 @@ class PathFinder:
         #first one is the min distance point
         return dists[0][0]
     
-    def __performActions(self,actions, world):
+    def __performActions(self,actions):
         for action in actions:            
             if action[0] == 'Drone':
-                self.__action(world, world.GetDronePosition(), action[1], False)
+                self.__action(self.world.GetDronePosition(), action[1], False)
             
             if action[0] == 'Block':
-                self.__action(world, action[1], action[2], True)
+                self.__action(action[1], action[2], True)
     
-    def __action(self, world, startPos, goalPos, hasBlock):
+    def __action(self, startPos, goalPos, hasBlock):
         
         print('Identifying the path for startPos = {} and goalPos = {} for {}'.format(startPos,goalPos, 'Drone' if hasBlock == False else 'Block'))
         
         start_time = time.time()
         
-        path,_ = self.SearchAlgo.Search(startPos,goalPos,world, isDrone = (hasBlock == False))
+        path,_ = self.SearchAlgo.Search(startPos,goalPos,self.world, isDrone = (hasBlock == False))
         
         self.__calculateTime(start_time)
         
@@ -269,7 +269,7 @@ class PathFinder:
         
         #Attach drone to the block
         if hasBlock == True:            
-            success = world.Attach()
+            success = self.world.Attach()
             if success == True:
                 print('Block attached successfully')
         
@@ -285,7 +285,7 @@ class PathFinder:
             dx,dy,dz = (newPos[0]-oldPos[0], newPos[1]-oldPos[1],newPos[2]-oldPos[2])
             
             #Perform the move in the world.
-            moved = world.Move(dx,dy,dz)
+            moved = self.world.Move(dx,dy,dz)
             
             if moved == False:
                 print('Move operation failed.. Terminating')
@@ -296,7 +296,7 @@ class PathFinder:
             i+= 1
             
         if hasBlock == True:
-            success = world.Release()
+            success = self.world.Release()
             if success == True:
                 print('Block released successfully')
         
@@ -312,12 +312,12 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('Initialisation.txt')   
+    world.Initialise('grid3.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("TestGoals.txt")       
+    goalStates = world.ReadGoalFile("test.txt")       
     
     pathFinder = PathFinder(world,astar)
     pathFinder.AchieveGoalStates(goalStates)
