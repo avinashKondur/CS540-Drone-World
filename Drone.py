@@ -276,7 +276,14 @@ class PathFinder:
             dx,dy,dz = (newPos[0]-oldPos[0], newPos[1]-oldPos[1],newPos[2]-oldPos[2])
             
             #Perform the move in the world.
-            world.Move(dx,dy,dz)
+            moved = world.Move(dx,dy,dz)
+            
+            if moved == False:
+                print('Move operation failed.. Terminating')
+                exit()
+            
+            oldPos = newPos
+            
             i+= 1
             
         if hasBlock == True:
