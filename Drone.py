@@ -190,7 +190,7 @@ class PathFinder:
             return dists[0][0] ,[]   
         
         #if there are no blocks of the color readily available to move.
-        heights = [(index, index[1]-world.GetMaxHeight(index)) for index in world.world.GetAvailableBlocks(color)]
+        heights = [(index, index[1]-world.GetMaxHeight(index)) for index in world.GetAvailableBlocks(color)] # changed from world.world.GetAvailableBlocks(color)
         heights = sorted(heights, key = lambda i : i[1])
         
         pos, h = heights[0][0], world.GetMaxHeight(heights[0][0])
@@ -303,12 +303,12 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('grid3.txt')   
+    world.Initialise('Initialisation.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("test.txt")       
+    goalStates = world.ReadGoalFile("TestGoals.txt")       
     
     pathFinder = PathFinder(world,astar)
     pathFinder.AchieveGoalStates(goalStates)
