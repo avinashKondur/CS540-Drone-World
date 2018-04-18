@@ -196,7 +196,7 @@ class PathFinder:
         pos, h = heights[0][0], world.GetMaxHeight(heights[0][0])
         
         # get Empty locations near by so that that blocks can be moved to achieve the desired height
-        neighbours = self.__getEmptyLocations(pos[1]-h+1,world,goalState,color)
+        neighbours = self.__getEmptyLocations(h-pos[1],world,goalState,color)
                     
         height = h
         actions = []

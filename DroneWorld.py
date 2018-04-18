@@ -32,7 +32,7 @@ class DroneSimulator:
         data = fo.read()
         lines = data.split('\n')
 
-        print(lines)
+        #print(lines)
         # fetch the drones information from the list
         drones = list(filter(lambda x: 'DRONE' in str.upper(str.strip(x)), lines))
 
@@ -317,15 +317,16 @@ class DroneSimulator:
                         nGrid[p[0]][int(gPos[1]) - 1][p[2]] != '' and p[1] == int(gPos[1])), indices))
         else:
 
-            yLevelIndices = list(filter(lambda p: nGrid[p[0]][p[1] - 1][p[2]] != '', indices))
-        # print('len(yLevelIndices)=',yLevelIndices)
+            yLevelIndices = list(filter(lambda x: (self.Grid[x[0]][ x[1] - 1][ x[2]] != '' and [x[0], x[1] - 1, x[2]] != self.CurrentDronePos)
+                           or  x[1]  == 0 ,indices))
+            #print('len(yLevelIndices)=',yLevelIndices)
 
         if xmissing == False:
-            yLevelIndices = list(filter(lambda p: p[0] == int(gPos[0]) + 50 , yLevelIndices))
+            yLevelIndices = list(filter(lambda p: p[0] == int(gPos[0])  , yLevelIndices))
             # print('len(yLevelIndices)=',yLevelIndices)
 
         if zmissing == False:
-            yLevelIndices = list(filter(lambda p: p[2] == int(gPos[2]) + 50 and self.ValidatePos(p,False), yLevelIndices))
+            yLevelIndices = list(filter(lambda p: p[2] == int(gPos[2]) and self.ValidatePos(p,False), yLevelIndices))
             # print('len(yLevelIndices)=',yLevelIndices)
 
         # print('yLevelIndices = ',yLevelIndices)
@@ -373,7 +374,9 @@ class DroneSimulator:
         return possiblePos
 
     def hasSupportingBlock(self,lists):
-        return list(filter(lambda x: [x[0], x[1] - 1, x[2]] != world.CurrentDronePos,lists))
+        return list(filter(lambda x: (self.Grid[x[0]][ x[1] - 1][ x[2]] != '' and [x[0], x[1] - 1, x[2]] != self.CurrentDronePos)
+                           or  x[1]  == 0 ,lists))
+
     
     def GetMaxHeight(self, goalState=None):
         
