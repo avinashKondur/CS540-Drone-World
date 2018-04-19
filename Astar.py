@@ -29,7 +29,8 @@ class AStartSearch:
         actions = actionF(parentNode.state,world)
     
         if not actions:
-            print(actions)
+            #print(parentNode.state)
+            print('There are no actions available')
             return ("Path does not exists", float('inf'))
         children = []
     
@@ -54,6 +55,7 @@ class AStartSearch:
             alternativef = children[1].f if len(children) > 1 else float('inf')
             result, bestChild.f = self.aStarSearchHelper(bestChild,goalState,actionF, takeActionF, goalTestF, hF, min(fmax, alternativef), visited, unExplored,world)
             if result is not "failure":
+                #print(result)
                 result.insert(0, parentNode.state)
                 return (result, bestChild.f)
             if unExplored == []:

@@ -11,7 +11,7 @@ from RelaxedAStar import RAStarSearch
 from Plots import PlotPath
 import random
 import time
-
+import numpy as np
 class PathFinder:
     
     def __init__(self,world,searchAlgorithm):
@@ -115,11 +115,13 @@ class PathFinder:
                 
         currentHeight = world.GetMaxHeight(goalState)        
         x, goalHeight, z  = goalState[0],goalState[1],goalState[2] 
+
+        print(goalHeight, currentHeight)
         #dronePos = world.GetDronePosition()
         
         actions = []
         #if the target location is empty and there is a supporting block below
-        if currentHeight == goalHeight-1:
+        if (currentHeight == goalHeight-1) or (goalHeight == 0  and currentHeight == goalHeight):
             print('goal state is empty and no blocks need to be moved....')
             sourcePos,sourcePosActions = self.__identifySourcePosition(world,goalState,color)
             
@@ -128,7 +130,7 @@ class PathFinder:
             actions = self.__getActions(world, sourcePos, goalState,color)
         
         # if the target location does not have supporting block below
-        if currentHeight < goalHeight-1:
+        elif currentHeight < goalHeight-1:
             print('The plane of the goal state does not have the required minimum height so blocks need to be placed..')
             # get blocks near by that can be place to achieve the desired height
             neighbours = self.__getBlocks(goalHeight-currentHeight-1,world,goalState,color)
@@ -151,7 +153,7 @@ class PathFinder:
             actions += self.__getActions(world, sourcePos, goalState,color)
         
         #if the target location is occupied and there are blocks on top of it.
-        if currentHeight > goalHeight-1:
+        elif currentHeight > goalHeight-1:
             print('The plane of the goal state has greater than the required height so blocks need to be removed..')
             # get Empty locations near by so that that blocks can be moved to achieve the desired height
             neighbours = self.__getEmptyLocations(currentHeight-goalHeight+1,world,goalState,color)
@@ -250,7 +252,8 @@ class PathFinder:
     def __performActions(self,actions):
         for action in actions:            
             if action[0] == 'Drone':
-                self.__action(self.world.GetDronePosition(), action[1], False)
+                goal = [action[1][0],action[1][1]+1,action[1][2]]
+                self.__action(self.world.GetDronePosition(), goal, False)
             
             if action[0] == 'Block':
                 self.__action(action[1], action[2], True)
@@ -272,7 +275,11 @@ class PathFinder:
             success = self.world.Attach()
             if success == True:
                 print('Block attached successfully')
-        
+            else:
+                print('**********failed to attach block')
+        else:
+            print('hasBlock is false**************')
+
         print('Performing moves in the world using obtained path')
         
         steps = len(path)
@@ -282,11 +289,14 @@ class PathFinder:
             newPos = path[i]
             
             #identify the change in the Positions
-            dx,dy,dz = (newPos[0]-oldPos[0], newPos[1]-oldPos[1],newPos[2]-oldPos[2])
+            #dx,dy,dz = (newPos[0]-oldPos[0], newPos[1]-oldPos[1],newPos[2]-oldPos[2])
             
+
             #Perform the move in the world.
-            moved = self.world.Move(dx,dy,dz)
+            moved = self.world.Move(oldPos, newPos)
             
+            #print('Successfully moved the block')
+
             if moved == False:
                 print('Move operation failed.. Terminating')
                 exit
@@ -296,7 +306,7 @@ class PathFinder:
             i+= 1
             
         if hasBlock == True:
-            success = self.world.Release()
+            success = self.world.Release(goalPos)
             if success == True:
                 print('Block released successfully')
         
@@ -312,12 +322,26 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('grid3.txt')   
+    world.Initialise('input3.txt')   
+    #world.Initialise('myInput.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("test.txt")       
+    goalStates = world.ReadGoalFile("output3.txt")
+    #goalStates = world.ReadGoalFile("myOutput.txt")  
+
+
     
     pathFinder = PathFinder(world,astar)
+    #for mygoal in goalStates:
+     #   print("****************************************")
+      #  print("searching for goal state : ",mygoal)
+       # print("****************************************")
     pathFinder.AchieveGoalStates(goalStates)
+
+    
+    nGrid = np.asarray(world.Grid)
+    xi, yi, zi = np.where(nGrid != '')
+    indices = [[x, y, z] for x, y, z in zip(*(xi, yi, zi))]
+    print(indices)

@@ -137,41 +137,45 @@ class DroneSimulator:
 
     def Attach(self):
         dronePos = self.CurrentDronePos
-        if (dronePos[0], dronePos[1] - 1, dronePos[2]) in self.OccupiedPos:
+        blockPos = [dronePos[0], dronePos[1] - 1, dronePos[2]]
+        #print(blockPos)
+
+        if  blockPos in self.OccupiedPos:
             self.IsBlockAttached = True
             return True
+        elif (self.IsBlockAttached):
+            print("Drone is attached to a Block")
+            return False
         else:
             print("Block cannot be attached as there is no block below.")
             return False
 
-    def Move(self, dx, dy, dz):
+    def Move(self, oldPos, newPos):
+
+        dx,dy,dz = (newPos[0]-oldPos[0], newPos[1]-oldPos[1],newPos[2]-oldPos[2])
 
         if dx not in [-1, 0, 1] or dy not in [-1, 0, 1] or dz not in [-1, 0, 1]:
             print("displacement length should not exceed more than 1 in length")
             return False
 
-        newDronePos = [self.CurrentDronePos[0] + dx, self.CurrentDronePos[1] + dy, self.CurrentDronePos[2] + dz]
-
-        if newDronePos in self.OccupiedPos:
-            print("Destination square for drone is occupied")
-            return False
-
         if self.IsBlockAttached:
-            newOccupiedPos = [newDronePos[0], newDronePos[1] - 1, newDronePos[2]]
 
-            if newOccupiedPos in self.OccupiedPos:
+            newDronePos = [newPos[0], newPos[1] + 1, newPos[2]]
+            
+
+            if newPos in self.OccupiedPos:
                 print("Drone has block attached and the new position has a block obstructing the dron movement")
-                return False
-
-            currentOccupiedPos = [self.CurrentDronePos[0], self.CurrentDronePos[1] - 1, self.CurrentDronePos[2]]
+                return False            
 
             # move the block to new Position
-            self.Grid[newOccupiedPos[0]][newOccupiedPos[1]][newOccupiedPos[2]] = \
-            self.Grid[currentOccupiedPos[0]][currentOccupiedPos[1]][currentOccupiedPos[2]]
-            self.OccupiedPos.append(newOccupiedPos)
+            self.Grid[newPos[0]][newPos[1]][newPos[2]] = \
+            self.Grid[oldPos[0]][oldPos[1]][oldPos[2]]
+            self.OccupiedPos.append(newPos)
 
-            self.Grid[currentOccupiedPos[0]][currentOccupiedPos[1]][currentOccupiedPos[2]] = ''
-            self.OccupiedPos.remove(currentOccupiedPos)
+            self.Grid[oldPos[0]][oldPos[1]][oldPos[2]] = ''
+            self.OccupiedPos.remove(oldPos)
+        else:
+            newDronePos = newPos
 
         # move the Drone to new Position
         self.Grid[newDronePos[0]][newDronePos[1]][newDronePos[2]] = \
@@ -185,17 +189,18 @@ class DroneSimulator:
 
         return True
 
-    def Release(self):
+    def Release(self, goalState):
         if not self.IsBlockAttached:
             print("There is no block atttached and Release cannot be performed")
             return False
 
-        currentOccupiedPos = (self.CurrentDronePos[0], self.CurrentDronePos[1] - 1, self.CurrentDronePos[2])
-        while (currentOccupiedPos[0], currentOccupiedPos[1] - 1, currentOccupiedPos[2]) not in self.OccupiedPos:
-            currentOccupiedPos = (currentOccupiedPos[0], currentOccupiedPos[1] - 1, currentOccupiedPos[2])
+        currentOccupiedPos = [self.CurrentDronePos[0], self.CurrentDronePos[1] - 1, self.CurrentDronePos[2]]
+        if currentOccupiedPos == goalState:
+            self.IsBlockAttached = False
+            print('Block Released Succesfully')
+            return True
 
-        self.IsBlockAttached = False
-        return True
+        return False
 
     def __getDataFromLine(self, line):
 
@@ -249,15 +254,14 @@ class DroneSimulator:
             return None, False
 
         # check if the block position is not in air
-        if isDrone == False and pathSearch == False and y != 0 and [x, y - 1, z] not in self.OccupiedPos and [x, y - 1,
-                                                                                                              z] != self.CurrentDronePos:
+        if isDrone == False and y != 0 and pathSearch == False and [x, y - 1, z] not in self.OccupiedPos and [x, y - 1, z] != self.CurrentDronePos:
             # print('There is no supporting block below for pos = {0}'.format(pos))
             return None, False
 
         # if this is called in path search then, we would need to check position above the block is also un occcupied for the
         # Drone to move, after finding the path
-        if isDrone == False and pathSearch == True and [x, y + 1, z] in self.OccupiedPos:
-            return None, False
+        '''if isDrone == False and pathSearch == True and [x, y + 1, z] in self.OccupiedPos:
+            return None, False'''
 
         # check if the position is already occupied by another block
         if pos in self.OccupiedPos:

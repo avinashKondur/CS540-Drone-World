@@ -26,9 +26,8 @@ class ActionFunctions:
         self.isSearchForDonePath = isDrone
         
     def goalTestF(self,parent):
-        if ((parent[0]== self.goalState[0]) and (parent[2]==self.goalState[2]) and parent[1]>self.goalState[1]):
-            return True
-        elif parent==self.goalState:
+        
+        if parent==self.goalState:
             return True
         return False
     
@@ -46,19 +45,19 @@ class ActionFunctions:
             if newPos[1]<0:
                 continue
             
-            _,validBlock=world.ValidatePos(newPos, False, True)
+            _,validBlock=world.ValidatePos(newPos, self.isSearchForDonePath, True)
                         
             # if the search is for Drone to source block, then the below statement 
-            validDrone = False
+            '''validDrone = False
             if self.isSearchForDonePath == True:
                 
                 DronePos=[newPos[0],newPos[1]+1,newPos[2]]
                 _,validDrone=world.ValidatePos(DronePos,True,True)
                 
                 #if validDrone == False:
-                    #print(validDrone, DronePos)
+                    #print(validDrone, DronePos)'''
                 
-            if (validBlock == True and validDrone == True) or (validBlock == True and self.isSearchForDonePath == False):
+            if validBlock == True: #and validDrone == True) or (validBlock == True and self.isSearchForDonePath == False):
     
                 if dx >= 0 and action[0] >= 0 and action not in modiAction:  # right
                     modiAction.append(action)
