@@ -83,10 +83,11 @@ class PathFinder:
         
         #Update color if not mentioned.
         if isColorMentioned == False:
-            if isGoalComplete == True and world.IsPositionAvailable(goalState):
+            if isGoalComplete == True and not world.IsPositionAvailable(goalState):
                 color = world.GetColor(goalState)
             else:
                 color = self.__getRandomColor()
+                print('this is the color assigned : ', color)
                 
         # identify goal state if it is incomplete        
         if isGoalComplete == False:
@@ -249,13 +250,13 @@ class PathFinder:
             return dists[0][0] ,[]   '''
         
         #if there are no blocks of the color readily available to move.
-        heights = [(index, index[1]-world.GetMaxHeight(index)) for index in world.GetAvailableBlocks(color,self.__goalStates)]
+        heights = [(index, world.GetMaxHeight(index)-index[1]) for index in world.GetAvailableBlocks(color,self.__goalStates)]
         heights = sorted(heights, key = lambda i : i[1])
         
         print("Avilable :",world.GetAvailableBlocks(color,self.__goalStates))
 
         pos, h = heights[0][0], world.GetMaxHeight(heights[0][0])
-        print('Identifying source position = ', pos ,h)
+        print('Identifying source position = ', pos ,h, world.GetColor(pos))
         
         print('Identifying {} neighnours  to move the blocks in order to free the source blokc'.format(h-pos[1]))
         
@@ -393,14 +394,14 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    #world.Initialise('input1.txt')   
-    world.Initialise('myInput.txt')   
+    world.Initialise('input3.txt')   
+    #world.Initialise('myInput.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    #goalStates = world.ReadGoalFile("output1.txt")
-    goalStates = world.ReadGoalFile("myOutput.txt")  
+    goalStates = world.ReadGoalFile("output5.txt")
+    #goalStates = world.ReadGoalFile("myOutput.txt")  
 
 
     
