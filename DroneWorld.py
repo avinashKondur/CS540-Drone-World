@@ -464,7 +464,7 @@ class DroneSimulator:
              else:
                  indices.remove(self.CurrentDronePos)
                  indices = list(filter(lambda p : p[0] == goalState[0] and p[2] == goalState[2]  , indices))
-                 #print('indices in the plane = ', indices)
+                 #print('indices in the plane = ', indices, max(indices)[1])
                  maxHeight = max(indices)[1]
          else:
              maxHeight = max(indices)[1]
@@ -483,19 +483,21 @@ class DroneSimulator:
             indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
             indices.remove(self.CurrentDronePos)            
             positions = list(filter(lambda p : p[1] >= planeHeight and p[1] <= worldHeight 
-                                  and (self.GetColor([p[0],p[1]+1,p[2]]) == 'EMPTY' 
-                                       and self.GetColor([p[0],p[1]-1,p[2]]) != 'EMPTY'), indices))
-                                  #and self.GetColor(p) != color,indices))
+                                  and (self.GetMaxHeight(p) == p[1])
+                                  and self.GetColor(p) != color,indices))
             #print('Get Positions == before filtering goal states', positions)
             positions = list(filter(lambda p:p not in param[1],positions ))
-            
+            #print('Get Positions == After filtering goal states', positions)
             if positions == []:               
-               indices = list(filter(lambda p : (self.GetColor([p[0],p[1]+1,p[2]]) == 'EMPTY' 
-                                                 or self.GetColor([p[0],p[1]-1,p[2]]) != 'EMPTY'),indices))
-                                     #and self.GetColor(p) != color, indices))
-            #print('Get Positions == before filtering goal states', positions)
-            positions = list(filter(lambda p:p not in param[1],positions))
-                              
+               indices = list(filter(lambda p : (self.GetMaxHeight(p) == p[1])
+                                     and self.GetColor(p) != color, indices))
+               
+               #print('Get Positions == before filtering goal states', indices)
+               positions = list(filter(lambda p:p not in param[1],indices ))
+               #print('Get Positions == After filtering goal states', positions)
+               #if positions == [] :
+                   #print('Indices are = ', indices)
+                           
         if param[0] == 'Empty':
             xi,yi,zi = np.where(nGrid == 'EMPTY')
             indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
@@ -523,7 +525,7 @@ class DroneSimulator:
             #print('Color is = ', self.GetColor(index))
             if self.GetColor(index) == color and index not in goalStates:
                 points.append(index)
-        print([[x,y,z] for x,y,z in zip(*(np.where(nGrid !='EMPTY')))])
+        #print([[x,y,z] for x,y,z in zip(*(np.where(nGrid !='EMPTY')))])
         return points
         
     

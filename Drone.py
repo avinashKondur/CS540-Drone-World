@@ -187,7 +187,7 @@ class PathFinder:
             print('Identified neighbours are = ',neighbours)
             
             #identify source position that can be moved to goal state
-            sourcePos,sourcePosActions = self.__identifySourcePosition(world,goalState,color)
+            sourcePos,sourcePosActions = self.__identifySourcePosition(world,goalState,color,neighbours)
             
             height = currentHeight+1
             #create actions for neighbours and source block
@@ -239,7 +239,7 @@ class PathFinder:
         
         return actions
 
-    def __identifySourcePosition(self,world,goalState,color):
+    def __identifySourcePosition(self,world,goalState,color, neigs=[]):
         
         '''sourceLoc = world.GetLocationsOfMovableBlock(color, self.__goalStates)
         
@@ -252,7 +252,9 @@ class PathFinder:
             return dists[0][0] ,[]   '''
         
         #if there are no blocks of the color readily available to move.
-        heights = [(index, world.GetMaxHeight(index)-index[1]) for index in world.GetAvailableBlocks(color,self.__goalStates)]
+        blocks = world.GetAvailableBlocks(color,self.__goalStates)
+        blocks = list(filter(lambda p : p not in neigs,blocks))
+        heights = [(index, world.GetMaxHeight(index)-index[1]) for index in blocks ]
         heights = sorted(heights, key = lambda i : i[1])
         
         print("Avilable :",world.GetAvailableBlocks(color,self.__goalStates))
@@ -408,7 +410,7 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('input4.txt')   
+    world.Initialise('input5.txt')   
     #world.Initialise('myInput.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
