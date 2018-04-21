@@ -462,7 +462,10 @@ class DroneSimulator:
              if nGrid[goalState[0]][0][goalState[2]] == 'EMPTY' :
                  maxHeight = -1
              else:
-                 maxHeight = max(list(filter(lambda p : p[0] == goalState[0] and p[2] == goalState[2]  and p != self.CurrentDronePos, indices)))[1]
+                 indices.remove(self.CurrentDronePos)
+                 indices = list(filter(lambda p : p[0] == goalState[0] and p[2] == goalState[2]  , indices))
+                 #print('indices in the plane = ', indices)
+                 maxHeight = max(indices)[1]
          else:
              maxHeight = max(indices)[1]
          return maxHeight
@@ -473,19 +476,25 @@ class DroneSimulator:
         planeHeight = self.GetMaxHeight(goalState)
          
         nGrid = np.asarray(self.Grid)
-         
+        
+        print('Parsed goal States = ', param[1])
         if param[0] == 'Blocks':
             xi,yi,zi = np.where(nGrid != 'EMPTY')
             indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
-            #indices.remove(self.CurrentDronePos)            
+            indices.remove(self.CurrentDronePos)            
             positions = list(filter(lambda p : p[1] >= planeHeight and p[1] <= worldHeight 
-                                  and (self.GetColor([p[0],p[1]+1,p[2]]) != 'EMPTY' or self.GetColor([p[0],p[1]+1,p[2]]) != 'DRONE')
-                                  and self.GetColor(p) != color
-                                  and p not in param[1], indices))
+                                  and (self.GetColor([p[0],p[1]+1,p[2]]) == 'EMPTY' 
+                                       and self.GetColor([p[0],p[1]-1,p[2]]) != 'EMPTY'), indices))
+                                  #and self.GetColor(p) != color,indices))
+            #print('Get Positions == before filtering goal states', positions)
+            positions = list(filter(lambda p:p not in param[1],positions ))
+            
             if positions == []:               
-               indices = list(filter(lambda p : (self.GetColor([p[0],p[1]+1,p[2]]) != 'EMPTY' or self.GetColor([p[0],p[1]+1,p[2]]) != 'DRONE')
-                                     and self.GetColor(p) != color
-                                     and p not in param[1], indices))
+               indices = list(filter(lambda p : (self.GetColor([p[0],p[1]+1,p[2]]) == 'EMPTY' 
+                                                 or self.GetColor([p[0],p[1]-1,p[2]]) != 'EMPTY'),indices))
+                                     #and self.GetColor(p) != color, indices))
+            #print('Get Positions == before filtering goal states', positions)
+            positions = list(filter(lambda p:p not in param[1],positions))
                               
         if param[0] == 'Empty':
             xi,yi,zi = np.where(nGrid == 'EMPTY')

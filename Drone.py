@@ -184,6 +184,8 @@ class PathFinder:
             # get blocks near by that can be place to achieve the desired height
             neighbours = self.__getBlocks(goalHeight-currentHeight-1,world,goalState,color)
             
+            print('Identified neighbours are = ',neighbours)
+            
             #identify source position that can be moved to goal state
             sourcePos,sourcePosActions = self.__identifySourcePosition(world,goalState,color)
             
@@ -311,7 +313,7 @@ class PathFinder:
         if actions == []:
             print('No Actions to perform')
             return
-        print('Actions to perform are = ', actions)
+        #print('Actions to perform are = ', actions)
         
         for action in actions:            
             if action[0] == 'Drone':
@@ -328,10 +330,22 @@ class PathFinder:
         start_time = time.time()
         
         
+        if startPos == goalPos:
+            print('Goal is already achieve, no need to find path')
+            print('Successfully performed moves')
+            print('Current Drone Pos = ', self.world.GetDronePosition())
+            print('Current world is , ',self.world.OccupiedPos)
+            print('Count of empty in the world : ',self.world.getcountempty())
+            return
+        
         dx,dy,dz = (goalPos[0]-startPos[0], goalPos[1]-startPos[1],goalPos[2]-startPos[2])
-        if dx in [-1, 0, 1] and dy in [-1, 0, 1] and dz in [-1, 0, 1]:
+        if dx in [-1,0, 1] and dy in [-1,0, 1] and dz in [-1,0, 1]:
             moved = self.world.Move(startPos, goalPos,hasBlock)
             print('{} has to move only one position. so moved successfully'.format( 'Drone' if hasBlock == False else self.world.GetColor(startPos) ))
+            print('Successfully performed moves')
+            print('Current Drone Pos = ', self.world.GetDronePosition())
+            print('Current world is , ',self.world.OccupiedPos)
+            print('Count of empty in the world : ',self.world.getcountempty())
             return    
                 
 
@@ -394,13 +408,13 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('input3.txt')   
+    world.Initialise('input4.txt')   
     #world.Initialise('myInput.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("output5.txt")
+    goalStates = world.ReadGoalFile("output3.txt")
     #goalStates = world.ReadGoalFile("myOutput.txt")  
 
 
@@ -411,7 +425,7 @@ if __name__ == '__main__':
       #  print("searching for goal state : ",mygoal)
        # print("****************************************")
     pathFinder.AchieveGoalStates(goalStates)
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
     
     nGrid = np.asarray(world.Grid)
     xi, yi, zi = np.where(nGrid != 'EMPTY')
