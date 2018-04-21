@@ -26,7 +26,6 @@ class ActionFunctions:
         self.isSearchForDonePath = isDrone
         
     def goalTestF(self,parent):
-        
         if parent==self.goalState:
             return True
         return False
@@ -45,34 +44,37 @@ class ActionFunctions:
             if newPos[1]<0:
                 continue
             
-            _,validBlock=world.ValidatePos(newPos, self.isSearchForDonePath, True)
+            _,validBlock=world.ValidatePosForPath(newPos)
                         
             # if the search is for Drone to source block, then the below statement 
             '''validDrone = False
             if self.isSearchForDonePath == True:
                 
                 DronePos=[newPos[0],newPos[1]+1,newPos[2]]
-                _,validDrone=world.ValidatePos(DronePos,True,True)
+                _,validDrone=world.ValidatePos(DronePos,True,True)'''
                 
                 #if validDrone == False:
-                    #print(validDrone, DronePos)'''
+                    #print(validDrone, DronePos)
                 
-            if validBlock == True: #and validDrone == True) or (validBlock == True and self.isSearchForDonePath == False):
+            if validBlock == True :
     
-                if dx >= 0 and action[0] >= 0 and action not in modiAction:  # right
+                if dx > 0 and action[0] > 0 and action not in modiAction and dy == 0 and dz == 0:  # right
                     modiAction.append(action)
-                elif dx < 0 and action[0] < 0 and action not in modiAction:  # left
+                elif dx < 0 and action[0] < 0 and action not in modiAction and dy == 0 and dz == 0:  # left
                     modiAction.append(action)
-                if dy >= 0 and action[1] >= 0 and action not in modiAction:  # up
+                if dy > 0 and action[1] > 0 and action not in modiAction and dx == 0 and dz == 0:  # up
                     modiAction.append(action)
-                elif dy < 0 and action[1] < 0 and action not in modiAction:  # down
+                elif dy < 0 and action[1] < 0 and action not in modiAction and dx == 0 and dz == 0:  # down
+                    #print('going down  = ', self.goalState, state, action)
                     modiAction.append(action)
-                if dz >= 0 and action[2] >= 0 and action not in modiAction:  # forward
+                if dz > 0 and action[2] > 0 and action not in modiAction and dy == 0 and dx == 0:  # forward
                     modiAction.append(action)
-                elif dz < 0 and action[1] < 0 and action not in modiAction:  # backward
+                elif dz < 0 and action[2] < 0 and action not in modiAction and dx == 0 and dy == 0:  # backward
                     modiAction.append(action)
                 if action not in modiAction:
                     modiAction.append(action)
+            '''else: 
+                print('state = {} action = {}'.format(state, action))'''
         
         return(modiAction)
     

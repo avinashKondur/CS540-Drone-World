@@ -12,6 +12,8 @@ from Plots import PlotPath
 import random
 import time
 import numpy as np
+import copy
+
 class PathFinder:
     
     def __init__(self,world,searchAlgorithm):
@@ -20,12 +22,15 @@ class PathFinder:
         self.SearchAlgo = searchAlgorithm
         self.__goalStates = [] 
         self.finalActions = dict()
+        self.AvailbelColors = dict()
     
     
     def AchieveGoalStates(self, goalStates):
         
         self.__goalStates = [goal[0] for goal in goalStates]
         
+        self.AvailbelColors = copy.deepcopy(self.world.colors)
+
         for goal in goalStates:
             
             start_time = time.time()
@@ -37,7 +42,7 @@ class PathFinder:
             print('*************************************************************')
             
             #identify goalstate if incomplete and also all actions required to perform
-            goalState, actions = self.__identifyActions(self.world,goalState, color)
+            goalState, actions,color = self.__identifyActions(self.world,goalState, color)
             
             print('obtained actions ....\n Starting performing actions .... ')
             
@@ -47,14 +52,26 @@ class PathFinder:
             self.__performActions(actions)
             
             print('All actions are performed.......')
+
+            print(' Currently Occupied Positions of World are ', self.world.OccupiedPos)
             
             #add the new goalState to the list if it empty, so that next steps in identify the goalState will eliminate this.
             if goal[0].count('?') > 0 :
-                self.__goalStates.append(goalState)  
+                self.__goalStates.append(goalState)
+
+            self.AvailbelColors[color] -= 1 
             
             self.__calculateTime(start_time)
         
+    
+    def __getRandomColor(self):
         
+        availableColor = []
+        for color in list(self.AvailbelColors.keys()):
+            
+            if self.AvailbelColors[color]  > 0:
+                availableColor.append(color)
+        return random.choice(availableColor)
         
     def __identifyActions(self,world,goalState,color):
         
@@ -69,7 +86,7 @@ class PathFinder:
             if isGoalComplete == True and world.IsPositionAvailable(goalState):
                 color = world.GetColor(goalState)
             else:
-                color = world.GetRandomAvailableColor()
+                color = self.__getRandomColor()
                 
         # identify goal state if it is incomplete        
         if isGoalComplete == False:
@@ -86,11 +103,11 @@ class PathFinder:
         
         print('Actions are successfully identified inorder to achieve goalState {}'.format(actions))
         
-        return goalState, actions
+        return goalState, actions,color
     
     def __identifyGoalState(self,world,goalState,color):
         #xMissing, yMissing, zMissing = goalState[0] == '?', goalState[1] == '?', goalState[2] == '?'
-        isColorGiven = False if color == '?' else True
+        '''isColorGiven = False if color == '?' else True
         
         possiblePos = world.checkGoalAlreadyReached(color, goalState,self.__goalStates)
 
@@ -109,10 +126,40 @@ class PathFinder:
             #print(possiblePos)
             newGoalState=self.__getNearestPositions(possiblePos,world.GetDronePosition())
             
-        return newGoalState,color
+        return newGoalState,color'''
+
+        xMissing, yMissing, zMissing = goalState[0] == '?', goalState[1] == '?', goalState[2] == '?'
+        x=0
+        y=0
+        z=0
+
+        if xMissing == False:
+            x = goalState[0]
+
+        if yMissing == False:
+            y = goalState[1]
+
+        if zMissing == False:
+            z = goalState[2]        
+
+        i = 1
+        while (world.GetColor([x,y,z]) != 'EMPTY'):
+            if i % 3 == 1 and yMissing == True:
+                y += 1                
+            if i % 3 == 2 and xMissing == True:
+                x+=1
+            if i % 3 == 0 and zMissing == True:
+                z+=1
+
+            i+= 1
+
+        return [x,y,z],color
     
     def __getActionsForCompleteGoal(self, world,goalState,color):
-                
+        
+        if world.GetColor(goalState) == color:
+            print('Goal = {} is already having a block with goal color = {}'.format(goalState, color))
+            return []
         currentHeight = world.GetMaxHeight(goalState)        
         x, goalHeight, z  = goalState[0],goalState[1],goalState[2] 
 
@@ -127,11 +174,12 @@ class PathFinder:
             
             actions += sourcePosActions
             
-            actions = self.__getActions(world, sourcePos, goalState,color)
+            actions += self.__getActions(world, sourcePos, goalState,color)
         
         # if the target location does not have supporting block below
         elif currentHeight < goalHeight-1:
-            print('The plane of the goal state does not have the required minimum height so blocks need to be placed..')
+
+            print('The plane of the goal state does not have the required minimum height so blocks need to be placed.. = ',goalHeight-currentHeight-1)
             # get blocks near by that can be place to achieve the desired height
             neighbours = self.__getBlocks(goalHeight-currentHeight-1,world,goalState,color)
             
@@ -154,7 +202,7 @@ class PathFinder:
         
         #if the target location is occupied and there are blocks on top of it.
         elif currentHeight > goalHeight-1:
-            print('The plane of the goal state has greater than the required height so blocks need to be removed..')
+            print('The plane of the goal state has greater than the required height so blocks need to be removed..',currentHeight-goalHeight+1)
             # get Empty locations near by so that that blocks can be moved to achieve the desired height
             neighbours = self.__getEmptyLocations(currentHeight-goalHeight+1,world,goalState,color)
                         
@@ -190,7 +238,7 @@ class PathFinder:
 
     def __identifySourcePosition(self,world,goalState,color):
         
-        sourceLoc = world.GetLocationsOfMovableBlock(color)
+        '''sourceLoc = world.GetLocationsOfMovableBlock(color, self.__goalStates)
         
         print(sourceLoc)
         # if there is a block already available in the upper level, we will pick the one that is is nearer
@@ -198,20 +246,27 @@ class PathFinder:
             dists = [(index,EuclideanDistance(goalState, index)) for index in sourceLoc]
             dists = sorted(dists, key = lambda i : i[1])            
                            
-            return dists[0][0] ,[]   
+            return dists[0][0] ,[]   '''
         
         #if there are no blocks of the color readily available to move.
-        heights = [(index, index[1]-world.GetMaxHeight(index)) for index in world.GetAvailableBlocks(color)]
+        heights = [(index, index[1]-world.GetMaxHeight(index)) for index in world.GetAvailableBlocks(color,self.__goalStates)]
         heights = sorted(heights, key = lambda i : i[1])
         
+        print("Avilable :",world.GetAvailableBlocks(color,self.__goalStates))
+
         pos, h = heights[0][0], world.GetMaxHeight(heights[0][0])
-        #print(pos ,h)
+        print('Identifying source position = ', pos ,h)
+        
+        print('Identifying {} neighnours  to move the blocks in order to free the source blokc'.format(h-pos[1]))
+        
         # get Empty locations near by so that that blocks can be moved to achieve the desired height
         neighbours = self.__getEmptyLocations(h-pos[1],world,goalState,color)
-                    
+                
+        print('Neighbours = ', neighbours)
         height = h
         actions = []
         x,z = pos[0],pos[2]
+        
         
         #create actions for neighbours and source block
         for neighbor in neighbours:
@@ -222,6 +277,7 @@ class PathFinder:
             actions += self.__getActions(world,  [x,height,z],neighbor,blockColor)
             height -= 1
         
+        print('actions idenitfied for sourceposition = ',actions)
         return pos, actions
     
     def __getActions(self,world, source, goal,blockColor):
@@ -250,6 +306,12 @@ class PathFinder:
         return dists[0][0]
     
     def __performActions(self,actions):
+        
+        if actions == []:
+            print('No Actions to perform')
+            return
+        print('Actions to perform are = ', actions)
+        
         for action in actions:            
             if action[0] == 'Drone':
                 goal = [action[1][0],action[1][1]+1,action[1][2]]
@@ -260,15 +322,23 @@ class PathFinder:
     
     def __action(self, startPos, goalPos, hasBlock):
         
-        print('Identifying the path for startPos = {} and goalPos = {} for {}'.format(startPos,goalPos, 'Drone' if hasBlock == False else 'Block'))
+        print('Identifying the path for startPos = {} and goalPos = {} for {}'.format(startPos,goalPos, 'Drone' if hasBlock == False else self.world.GetColor(startPos)))
         
         start_time = time.time()
         
+        
+        dx,dy,dz = (goalPos[0]-startPos[0], goalPos[1]-startPos[1],goalPos[2]-startPos[2])
+        if dx in [-1, 0, 1] and dy in [-1, 0, 1] and dz in [-1, 0, 1]:
+            moved = self.world.Move(startPos, goalPos,hasBlock)
+            print('{} has to move only one position. so moved successfully'.format( 'Drone' if hasBlock == False else self.world.GetColor(startPos) ))
+            return    
+                
+
         path,_ = self.SearchAlgo.Search(startPos,goalPos,self.world, isDrone = (hasBlock == False))
         
         self.__calculateTime(start_time)
         
-        print('path identified successfully with length = {}...... path = {} '.format(len(path),path))
+        print('path identified successfully with length = {}...... path = {}\n current Drone Pos = {} '.format(len(path),path,world.GetDronePosition()))
         
         #Attach drone to the block
         if hasBlock == True:            
@@ -276,9 +346,7 @@ class PathFinder:
             if success == True:
                 print('Block attached successfully')
             else:
-                print('**********failed to attach block')
-        else:
-            print('hasBlock is false**************')
+                print('failed to attach block')
 
         print('Performing moves in the world using obtained path')
         
@@ -293,7 +361,7 @@ class PathFinder:
             
 
             #Perform the move in the world.
-            moved = self.world.Move(oldPos, newPos)
+            moved = self.world.Move(oldPos, newPos,hasBlock)
             
             #print('Successfully moved the block')
 
@@ -311,6 +379,9 @@ class PathFinder:
                 print('Block released successfully')
         
         print('Successfully performed moves')
+        print('Current Drone Pos = ', self.world.GetDronePosition())
+        print('Current world is , ',self.world.OccupiedPos)
+        print('Count of empty in the world : ',self.world.getcountempty())
         
     def __calculateTime(self, startTime):        
         print("--- time take %s seconds  = {} ---\n" % (time.time() - startTime))
@@ -322,14 +393,14 @@ if __name__ == '__main__':
     #goalState = '(6,0,-27,yellow)'
     
     world = DroneSimulator(100,50,100)
-    world.Initialise('input3.txt')   
-    #world.Initialise('myInput.txt')   
+    #world.Initialise('input1.txt')   
+    world.Initialise('myInput.txt')   
     hueristics = HeuristicFunctions()
     astar = AStartSearch(lambda x,y : hueristics.hf2(x,y))
     #astar = RAStarSearch(lambda x,y : hueristics.hf2(x,y))
 
-    goalStates = world.ReadGoalFile("output3.txt")
-    #goalStates = world.ReadGoalFile("myOutput.txt")  
+    #goalStates = world.ReadGoalFile("output1.txt")
+    goalStates = world.ReadGoalFile("myOutput.txt")  
 
 
     
@@ -342,6 +413,6 @@ if __name__ == '__main__':
 
     
     nGrid = np.asarray(world.Grid)
-    xi, yi, zi = np.where(nGrid != '')
+    xi, yi, zi = np.where(nGrid != 'EMPTY')
     indices = [[x, y, z] for x, y, z in zip(*(xi, yi, zi))]
     print(indices)
