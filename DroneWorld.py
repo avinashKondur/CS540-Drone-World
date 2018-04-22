@@ -482,27 +482,21 @@ class DroneSimulator:
             xi,yi,zi = np.where(nGrid != 'EMPTY')
             indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
             indices.remove(self.CurrentDronePos)            
-            positions = list(filter(lambda p : p[1] >= planeHeight and p[1] <= worldHeight 
-                                  and (self.GetMaxHeight(p) == p[1])
-                                  and self.GetColor(p) != color,indices))
-            #print('Get Positions == before filtering goal states', positions)
-            positions = list(filter(lambda p:p not in param[1],positions ))
-            #print('Get Positions == After filtering goal states', positions)
-            if positions == []:               
-               indices = list(filter(lambda p : (self.GetMaxHeight(p) == p[1])
-                                     and self.GetColor(p) != color, indices))
-               
-               #print('Get Positions == before filtering goal states', indices)
-               positions = list(filter(lambda p:p not in param[1],indices ))
-               #print('Get Positions == After filtering goal states', positions)
-               #if positions == [] :
-                   #print('Indices are = ', indices)
+            indices = list(filter(lambda p : (self.GetMaxHeight(p) == p[1]), indices))
+            
+            positions = list(filter(lambda p:p not in param[1],indices ))
+            print('Get Positions == after filtering goal states', positions)   
+            positions = list(filter(lambda p : not( p[0] == goalState[0] and p[2] == goalState[2]),positions))
+            print('Identified neighbour positions = ',positions,goalState)
                            
         if param[0] == 'Empty':
             xi,yi,zi = np.where(nGrid == 'EMPTY')
             indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
             positions = list(filter(lambda p : self.GetColor([p[0],p[1]-1,p[2]]) != 'EMPTY' or p[1] == 0, indices))
             positions = list(filter(lambda p : p not in param[1], positions))
+            positions = list(filter(lambda p : not( p[0] == goalState[0] and p[2] == goalState[2]),positions))
+        
+        
         
         dists = [(index,EuclideanDistance(goalState, index)) for index in positions]
         dists = sorted(dists, key = lambda i : i[1])
@@ -514,7 +508,7 @@ class DroneSimulator:
         nGrid = list(nGrid[0])
         return nGrid.count('EMPTY')
 
-    def GetAvailableBlocks(self, color,goalStates):
+    def GetAvailableBlocks(self, color,currentGoalState,goalStates):
         
         nGrid = np.asarray(self.Grid)
         xi,yi,zi = np.where(nGrid != 'EMPTY')
@@ -523,11 +517,17 @@ class DroneSimulator:
         points = []
         for index in indices:
             #print('Color is = ', self.GetColor(index))
-            if self.GetColor(index) == color and index not in goalStates:
+            if self.GetColor(index) == color and index not in goalStates and not (index[0] == currentGoalState[0] and index[2] == currentGoalState[2]):
                 points.append(index)
         #print([[x,y,z] for x,y,z in zip(*(np.where(nGrid !='EMPTY')))])
         return points
-        
+    def PrintCurrentWorld(self):
+         nGrid = np.asarray(self.Grid)
+         xi, yi, zi = np.where(nGrid != 'EMPTY')
+         indices = [[x, y, z] for x, y, z in zip(*(xi, yi, zi))]
+         indices.remove(self.GetDronePosition())
+         finalStateofworld = [(index, self.GetColor(index)) for index in indices]
+         print('current position of blocks = {} \nCurrent Drone Position = {}'.format(finalStateofworld,self.GetDronePosition()))
     
 if __name__ == '__main__':
     world = DroneSimulator(100,50,100)
