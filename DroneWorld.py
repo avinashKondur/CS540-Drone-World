@@ -521,6 +521,20 @@ class DroneSimulator:
                 points.append(index)
         #print([[x,y,z] for x,y,z in zip(*(np.where(nGrid !='EMPTY')))])
         return points
+    def GetBlock(self, color):
+        nGrid = np.asarray(self.Grid)
+        xi,yi,zi = np.where(nGrid == color)
+        indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
+        #print(indices)
+        return indices
+    
+    def GetAllBlocks(self):
+        nGrid = np.asarray(self.Grid)
+        xi,yi,zi = np.where(nGrid != 'EMPTY')
+        indices = [[x,y,z] for x,y,z in zip(*(xi,yi,zi))]
+        #print(indices)
+        return indices
+    
     def PrintCurrentWorld(self):
          nGrid = np.asarray(self.Grid)
          xi, yi, zi = np.where(nGrid != 'EMPTY')

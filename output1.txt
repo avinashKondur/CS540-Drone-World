@@ -1,2 +1,10 @@
-0 0 1 black
-0 15 1 red
+move red block on top of black
+move red block to the side of black
+keep red at height of 2
+keep 2 reds at height of 2
+keep red and black blocks at height 2 and 3 respectively
+keep black block below red block
+Move red block by 2 units to the right
+Move red block by 2 units to the left
+Move red block by 2 units to the UP
+Move red and black block by 2 and 3 units right
